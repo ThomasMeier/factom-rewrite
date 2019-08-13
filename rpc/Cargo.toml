@@ -1,0 +1,14 @@
+[package]
+name = "factomd-rpc"
+version = "0.1.0"
+authors = ["Thomas Meier <tom@hunter-wolf.com>"]
+edition = "2018"
+description = "A HTTP RPC server to support legacy and new factomd HTTP APIs"
+
+[dependencies]
+jsonrpc-core = "11.0.0"
+jsonrpc-core-client = "13.0.0"
+jsonrpc-http-server = "11.0.0"
+jsonrpc-derive = "11.0.0"
+serde = "1.0.92"
+slog = "^2"

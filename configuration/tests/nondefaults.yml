@@ -1,0 +1,15 @@
+# All settings changed from defaults
+server:
+  network: "test"
+
+rpc:
+  disable_rpc: true
+  rpc_port: 7777
+  rpc_addr: "192.0.0.1"
+
+log:
+  log_level: "CRITICAL" # ["OFF", "CRITICAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"] in that order of precedence
+
+walletd:
+  walletd_user: "test"
+  walletd_env_var: "TEST" # factomd will use this environment variable to determine walletd password 

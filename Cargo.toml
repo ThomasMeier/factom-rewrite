@@ -1,0 +1,25 @@
+[[bin]]
+name = "factomd"
+path = "src/main.rs"
+
+[package]
+name = "factomd"
+version = "0.1.0"
+authors = ["Thomas Meier <tom@hunter-wolf.com>"]
+edition = "2018"
+
+[dependencies]
+error-chain = '0.12'
+clap = "~2.32"
+factomd-configuration = { path = "./configuration" }
+factomd-service = { path = "./service" }
+
+[workspace]
+members = [
+	"configuration",
+	"rpc",
+	"service",
+]
+
+[badges]
+maintenance = { status = "actively-developed" }

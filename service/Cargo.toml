@@ -1,0 +1,18 @@
+[package]
+name = "factomd-service"
+version = "0.1.0"
+authors = ["Thomas Meier <tom@hunter-wolf.com>"]
+edition = "2018"
+description = "The Factom service that utilizes the Substrate service"
+
+[dependencies]
+factomd-rpc = { path = "../rpc" }
+factomd-configuration = { path = "../configuration" }
+clap = "~2.32"
+slog = "^2"
+slog-async = "^2"
+slog-term = "^2"
+
+[dependencies.substrate-cli]
+git = 'https://github.com/paritytech/substrate.git'
+rev = 'fc206f3a009b64fc746202e5b4c701bf7e24d1f1'

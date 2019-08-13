@@ -1,0 +1,18 @@
+# Factom Default Configuration
+# This is the default configuration file for factomd
+# The configuration is from a merge order of:
+# This file -> custom config -> CLI options
+server:
+  network: "main"
+
+rpc:
+  disable_rpc: false
+  rpc_port: 8088
+  rpc_addr: "127.0.0.1"
+
+log:
+  log_level: "DEBUG" # ["OFF", "CRITICAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"] in that order of precedence
+
+walletd:
+  walletd_user: ""
+  walletd_env_var: "" # factomd will use this environment variable to determine walletd password 
