@@ -777,6 +777,8 @@ dependencies = [
  "slog-async 2.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "slog-term 2.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "substrate-cli 1.0.0 (git+https://github.com/paritytech/substrate.git?rev=fc206f3a009b64fc746202e5b4c701bf7e24d1f1)",
+ "substrate-primitives 1.0.0 (git+https://github.com/paritytech/substrate.git?rev=fc206f3a009b64fc746202e5b4c701bf7e24d1f1)",
+ "substrate-service 1.0.0 (git+https://github.com/paritytech/substrate.git?rev=fc206f3a009b64fc746202e5b4c701bf7e24d1f1)",
 ]
 
 [[package]]

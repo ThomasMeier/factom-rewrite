@@ -16,3 +16,12 @@ slog-term = "^2"
 [dependencies.substrate-cli]
 git = 'https://github.com/paritytech/substrate.git'
 rev = 'fc206f3a009b64fc746202e5b4c701bf7e24d1f1'
+
+[dependencies.substrate-service]
+git = 'https://github.com/paritytech/substrate.git'
+rev = 'fc206f3a009b64fc746202e5b4c701bf7e24d1f1'
+
+[dependencies.primitives]
+git = 'https://github.com/paritytech/substrate.git'
+package = 'substrate-primitives'
+rev = 'fc206f3a009b64fc746202e5b4c701bf7e24d1f1'
