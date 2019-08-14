@@ -11,7 +11,7 @@
 
 ## Basic Overview
 
-The Factom® Protocol is a blockchain trusted by the U.S Department of Homeland Security, the Bill and Melinda Gates Foundation and other leading enterprise. The technology provides high throughput and easy integration into legacy systems, without the need to handle cryptocurrency. The protocol allows fixed costs to accurately budget projects, whilst securing unlimited data via simple API integrations.
+The Factom® Protocol is a blockchain utilized by the U.S Department of Homeland Security, the Bill and Melinda Gates Foundation and other leading enterprise. The technology provides high throughput and easy integration into legacy systems, without the need to handle cryptocurrency. The protocol allows fixed costs to accurately budget projects, whilst securing unlimited data via simple API integrations.
 
 ### Get the Stable Release
 
