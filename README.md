@@ -29,8 +29,8 @@ Feel free to check out the other options by using the `--help` flag. Additionall
 
 ### Building
 
-See [`docs/building-factom.md`](https://github.com/ThomasMeier/factomd-rewrite/blob/master/doc/building-factom.md) to see how you can build `factomd`.
+See [`docs/building-factom.md`](https://github.com/ThomasMeier/factom-rewrite/blob/master/doc/building-factom.md) to see how you can build `factomd`.
 
 ### Contributing
 
-Thank you for considering contributing! We welcome a wide range of contributions. Please see the [CONTRIBUTING](https://github.com/ThomasMeier/factomd-rewrite/blob/master/CONTRIBUTING.md) guide to see how you can help out. 
+Thank you for considering contributing! We welcome a wide range of contributions. Please see the [CONTRIBUTING](https://github.com/ThomasMeier/factom-rewrite/blob/master/CONTRIBUTING.md) guide to see how you can help out. 
