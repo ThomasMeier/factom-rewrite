@@ -36,6 +36,16 @@ arg_enum! {
     }
 }
 
+// Roles Enum
+arg_enum! {
+    #[derive(Debug, Deserialize, PartialEq)]
+    pub enum Role {
+        FULL,
+        LIGHT,
+        AUTHORITY
+    }
+}
+
 /// Logging Settings
 #[derive(StructOpt, Debug, Deserialize)]
 pub struct Log {
@@ -82,6 +92,14 @@ pub struct Server {
     /// Set network to join
     #[structopt(short = "n", long = "network", default_value = "main")]
     pub network: String,
+
+    /// Environment variable to source for your node_key
+    #[structopt (long = "role", short = "r", default_value = "", raw(possible_values = "&Role::variants()", case_insensitive = "false"))]
+    pub role: Role,
+
+    /// Environment variable to source for your node_key
+    #[structopt (long = "node_key_env", short = "k", default_value = "")]
+    pub node_key_env: String,
 }
 
 
@@ -111,7 +129,7 @@ pub struct FactomConfig {
 
     /// Generate completions
     #[structopt (long = "completions", default_value = "", raw(possible_values = "&Shell::variants()", case_insensitive = "false"))]
-    pub completions: String
+    pub completions: String,
 }
 
 /// Factom Configuration has a specific override order
@@ -140,6 +158,7 @@ impl FactomConfig {
     settings.merge(File::with_name("default_config.yml"))?;
 
     settings.set("custom_config", "")?;
+    settings.set("completions", "")?;
 
     // If custom_config isn't an empty string, put the custom config
     // on top of the default
@@ -174,6 +193,7 @@ mod tests {
         assert_eq!(nondefault_config.log.log_level, LogLevel::CRITICAL);
         assert_eq!(nondefault_config.walletd.walletd_user, "test");
         assert_eq!(nondefault_config.walletd.walletd_env_var, "TEST");
-
+        assert_eq!(nondefault_config.server.role, Role::LIGHT);
+        assert_eq!(nondefault_config.server.node_key_env, "FACTOMD_NODE_KEY");
     }
 }

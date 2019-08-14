@@ -4,6 +4,8 @@
 # This file -> custom config -> CLI options
 server:
   network: "main"
+  role: "full" # ["full", "light", "authority"]
+  node_key_env: "" # factomd will use this env var to find your node key 
 
 rpc:
   disable_rpc: false

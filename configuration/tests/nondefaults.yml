@@ -1,6 +1,8 @@
 # All settings changed from defaults
 server:
   network: "test"
+  role: "light" # ["full", "light", "authority"]
+  node_key_env: "FACTOMD_NODE_KEY" # factomd will use this env var to find your node key 
 
 rpc:
   disable_rpc: true
