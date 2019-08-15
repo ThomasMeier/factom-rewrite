@@ -2,6 +2,7 @@
 //! 
 //! This file contains a lot of Substrate boilerplate and standard glue. Some
 //! ways to alter finer details are available as well.
+//! 
 
 // For wasm compilation
 #![cfg_attr(not(feature = "std"), no_std)]
