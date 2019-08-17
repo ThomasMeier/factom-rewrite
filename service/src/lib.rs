@@ -1,8 +1,10 @@
 //! # Factom Service
 //! 
-//! Start a new node based on provided configuration, include the Factom runtime, set role, etc.
+//! Start a new node based on provided configuration.
 //! 
-//! This is just a wrapper with some customizations around the underlying Substrate Service.
+//! This will start the HTTP RPC API if enabled. It will set up a 
+//! logger for the program to use, and start a new Substrate service
+//! and runtime.
 //! 
 #[macro_use]
 
