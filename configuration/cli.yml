@@ -1,0 +1,45 @@
+name: Factom
+args:
+    - config:
+        short: c
+        long: config
+        value_name: FILE
+        help: Sets a custom config file
+        takes_value: true
+    - network:
+        short: n
+        long: network
+        takes_value: true
+    - role:
+        short: r
+        long: role
+        possible_values: [AUTHORITY, LIGHT, FULL]
+        takes_value: true
+    - node_key_env:
+        short: k
+        long: node_key_env
+        takes_value: true
+    - walletd_user:
+        long: walletd-user
+        takes_value: true
+    - walletd_env_var:
+        long: walletd-env-var
+    - disable_rpc:
+        short: d
+        long: disable-rpc
+        takes_value: true
+    - rpc_addr:
+        long: rpc-addr
+        takes_value: true
+    - rpc_port:
+        long: rpc-port
+        takes_value: true
+    - log_level:
+        short: l
+        long: log-level
+        possible_values: [OFF, CRITICAL, ERROR, WARN, INFO, DEBUG, TRACE]
+        takes_value: true
+    - completions:
+        long: completions
+        possible_values: [bash, fish, zsh, powershell, elvish]
+        takes_value: true
