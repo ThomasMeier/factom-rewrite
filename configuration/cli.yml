@@ -27,7 +27,6 @@ args:
     - disable_rpc:
         short: d
         long: disable-rpc
-        takes_value: true
     - rpc_addr:
         long: rpc-addr
         takes_value: true
