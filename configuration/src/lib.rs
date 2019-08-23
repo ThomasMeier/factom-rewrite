@@ -99,7 +99,7 @@ pub struct Server {
     #[structopt(
         long = "role",
         short = "r",
-        default_value = "",
+        default_value = "FULL",
         raw(possible_values = "&Role::variants()", case_insensitive = "false")
     )]
     pub role: Role,
@@ -136,12 +136,11 @@ pub struct FactomConfig {
     /// Generate completions
     #[structopt(
         long = "completions",
-        default_value = "",
-        raw(possible_values = "&Shell::variants()", case_insensitive = "false")
+        raw(possible_values = "&Shell::variants()"),
     )]
-    pub completions: String,
+    pub completions: Option<String>,
 }
-
+    
 /// Factom Configuration has a specific override order
 /// Higher precedence -> lower precedence
 /// CLI Args -> Environment Vars -> Custom Config -> default_config.yml
@@ -156,10 +155,10 @@ impl FactomConfig {
         // Just to get a custom config path
         let cli_args = FactomConfig::from_args();
 
-        // Dump shell completion to stdout
-        if !cli_args.completions.is_empty() {
-            FactomConfig::completions_to_stdout(&cli_args.completions);
-        }
+        // If a completions argument is provided, dump shell completion to stdout
+        if let Some(completion) = cli_args.completions {
+            FactomConfig::completions_to_stdout(&completion);
+        } 
 
         let file_args = FactomConfig::load_from_path(&cli_args.custom_config)?;
         let final_config = FactomConfig::check_cli(matches, file_args);
@@ -266,4 +265,6 @@ mod tests {
         assert_eq!(nondefault_config.server.role, Role::LIGHT);
         assert_eq!(nondefault_config.server.node_key_env, "FACTOMD_NODE_KEY");
     }
+
+
 }
