@@ -31,7 +31,7 @@ native_executor_instance!(
 	pub Executor,
 	factom_runtime::api::dispatch,
 	factom_runtime::native_version,
-	include_bytes!("../runtime/wasm/target/wasm32-unknown-unknown/release/node_template_runtime_wasm.compact.wasm")
+	include_bytes!("../runtime/wasm/target/wasm32-unknown-unknown/release/runtime_wasm.compact.wasm")
 );
 
 /// Inherent providers
