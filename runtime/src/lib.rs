@@ -60,6 +60,12 @@ pub type BlockNumber = u64;
 /// Index of an account's extrinsic in the chain.
 pub type Nonce = u64;
 
+/// Include Factoids
+mod factoid;
+
+/// Include Entry Credits
+mod entry_credit;
+
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
@@ -183,11 +189,32 @@ impl balances::Trait for Runtime {
 	type TransferPayment = ();
 }
 
+impl balances::Trait<balances::Instance0> for Runtime {
+	/// The type for recording an account's balance.
+	type Balance = u128;
+	/// What to do if an account's free balance gets zeroed.
+	type OnFreeBalanceZero = ();
+	/// What to do if a new account is created.
+	type OnNewAccount = Indices;
+	/// The uniquitous event type.
+	type Event = Event;
+
+	type TransactionPayment = ();
+	type DustRemoval = ();
+	type TransferPayment = ();
+}
+
 impl sudo::Trait for Runtime {
 	/// The uniquitous event type.
 	type Event = Event;
 	type Proposal = Call;
 }
+
+/// Used for the module factoid
+impl factoid::Trait for Runtime {}
+
+/// Used for the module entry_credit
+impl entry_credit::Trait for Runtime {}
 
 construct_runtime!(
 	pub enum Runtime with Log(InternalLog: DigestItem<Hash, AuthorityId, AuthoritySignature>) where
@@ -201,7 +228,10 @@ construct_runtime!(
 		Aura: aura::{Module},
 		Indices: indices,
 		Balances: balances,
+		BalancesCopy: balances::<Instance0>::{Module, Call, Storage, Event<T, I>},
 		Sudo: sudo,
+		EntryCredits: entry_credit::{Module, Call},
+		Factoids: factoid::{Module, Call},
 	}
 );
 

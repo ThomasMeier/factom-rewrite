@@ -8,12 +8,12 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [dependencies]
-runtime = { path = "..", default-features = false }
+factomd-runtime = { path = "..", default-features = false }
 
 [features]
 default = []
 std = [
-	"runtime/std",
+	"factomd-runtime/std",
 ]
 
 [profile.release]
