@@ -27,7 +27,6 @@ use structopt::StructOpt;
 arg_enum! {
     #[derive(Debug, Deserialize, PartialEq)]
     pub enum LogLevel {
-        OFF,
         CRITICAL,
         ERROR,
         WARN,
