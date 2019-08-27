@@ -53,7 +53,7 @@ pub struct Log {
         short = "l",
         long = "log-level",
         default_value = "DEBUG",
-        raw(possible_values = "&LogLevel::variants()", case_insensitive = "false")
+        raw(possible_values = "&LogLevel::variants()")
     )]
     pub log_level: LogLevel,
 }
@@ -98,13 +98,13 @@ pub struct Server {
     #[structopt(
         long = "role",
         short = "r",
-        default_value = "",
+        default_value = "FULL",
         raw(possible_values = "&Role::variants()", case_insensitive = "false")
     )]
     pub role: Role,
 
     /// Environment variable to source for your node_key
-    #[structopt(long = "node_key_env", short = "k", default_value = "")]
+    #[structopt(long = "node-key-env", short = "k", default_value = "")]
     pub node_key_env: String,
 }
 
@@ -135,12 +135,11 @@ pub struct FactomConfig {
     /// Generate completions
     #[structopt(
         long = "completions",
-        default_value = "",
-        raw(possible_values = "&Shell::variants()", case_insensitive = "false")
+        raw(possible_values = "&Shell::variants()"),
     )]
-    pub completions: String,
+    pub completions: Option<String>,
 }
-
+    
 /// Factom Configuration has a specific override order
 /// Higher precedence -> lower precedence
 /// CLI Args -> Environment Vars -> Custom Config -> default_config.yml
@@ -155,10 +154,10 @@ impl FactomConfig {
         // Just to get a custom config path
         let cli_args = FactomConfig::from_args();
 
-        // Dump shell completion to stdout
-        if !cli_args.completions.is_empty() {
-            FactomConfig::completions_to_stdout(&cli_args.completions);
-        }
+        // If a completions argument is provided, dump shell completion to stdout
+        if let Some(completion) = cli_args.completions {
+            FactomConfig::completions_to_stdout(&completion);
+        } 
 
         let file_args = FactomConfig::load_from_path(&cli_args.custom_config)?;
         let final_config = FactomConfig::check_cli(matches, file_args);
@@ -187,7 +186,7 @@ impl FactomConfig {
     }
 
     /// Check for supplied command line arguments and use them to overwrite config values from files.
-    pub fn check_cli(matches: clap::ArgMatches, mut config: FactomConfig) -> FactomConfig {
+    fn check_cli(matches: clap::ArgMatches, mut config: FactomConfig) -> FactomConfig {
         if matches.occurrences_of("network") > 0 {
             if let Some(value) = matches.value_of("network") {
                 config.server.network = value.to_string();
@@ -216,6 +215,7 @@ impl FactomConfig {
         if matches.occurrences_of("walletd_env_var") > 0 {
             if let Some(value) = matches.value_of("walletd_env_var") {
                 config.walletd.walletd_env_var = value.to_string();
+                println!("{:?}", config.walletd.walletd_env_var);
             }
         }
         if matches.occurrences_of("rpc_addr") > 0 {
@@ -229,11 +229,7 @@ impl FactomConfig {
             }
         }
         if matches.occurrences_of("disable_rpc") > 0 {
-            if let Some(value) = matches.value_of("disable_rpc") {
-                config.rpc.disable_rpc = value
-                    .parse::<bool>()
-                    .expect("`disable_rpc` must be a bool!");
-            }
+            config.rpc.disable_rpc = true;
         }
         config
     }
@@ -248,10 +244,26 @@ impl FactomConfig {
     }
 }
 
-// These tests can be moved to test dir if needed
 #[cfg(test)]
 mod tests {
     use super::*;
+    // use std::process::Command;
+    // use std::ffi::OsString;
+    // use assert_cmd::prelude::*;
+
+    #[test]
+    fn test_default() {
+        let config = FactomConfig::new().unwrap();
+
+        assert_eq!(config.rpc.rpc_addr, "127.0.0.1");
+        assert_eq!(config.rpc.rpc_port, 8088);
+        assert_eq!(config.server.network, "main");
+        assert_eq!(config.log.log_level, LogLevel::DEBUG);
+        assert_eq!(config.walletd.walletd_user, "");
+        assert_eq!(config.walletd.walletd_env_var, "");
+        assert_eq!(config.server.role, Role::FULL);
+        assert_eq!(config.server.node_key_env, "");
+    }
 
     #[test]
     fn test_nondefault_yaml() {
@@ -264,5 +276,40 @@ mod tests {
         assert_eq!(nondefault_config.walletd.walletd_env_var, "TEST");
         assert_eq!(nondefault_config.server.role, Role::LIGHT);
         assert_eq!(nondefault_config.server.node_key_env, "FACTOMD_NODE_KEY");
+    }
+
+    #[test]
+    // Ensure check_cli() function overwrites config file values.
+    fn test_check_cli() {
+        let file_args = FactomConfig::load_from_path("tests/nondefaults.yml").unwrap();
+        let vec = vec!["factomd",
+                        "--role", "AUTHORITY",
+                        "--rpc-port", "8099",
+                       "--rpc-addr", "8.8.8.8",
+                       "--disable-rpc",
+                       "--network", "custom",
+                       "--node-key-env", "NODE_KEY_EXAMPLE",
+                       "--walletd-user", "USER123",
+                       "--walletd-env-var", "WALLETD_ENV",
+                       "--log-level", "WARN"
+                       ];
+
+        let yaml = load_yaml!("../cli.yml");
+        let app = App::from_yaml(yaml);
+
+        let matches = App::get_matches_from(app, vec);
+
+        let final_config = FactomConfig::check_cli(matches, file_args);
+
+        assert_eq!(final_config.server.role, Role::AUTHORITY);
+        assert_eq!(final_config.rpc.rpc_port, 8099);
+        assert_eq!(final_config.rpc.rpc_addr, "8.8.8.8");
+        assert_eq!(final_config.rpc.disable_rpc, true);
+        assert_eq!(final_config.server.network, "custom");
+        assert_eq!(final_config.server.node_key_env, "NODE_KEY_EXAMPLE");
+        assert_eq!(final_config.walletd.walletd_user, "USER123");
+        assert_eq!(final_config.walletd.walletd_env_var, "WALLETD_ENV");
+        assert_eq!(final_config.log.log_level, LogLevel::WARN);
+
     }
 }

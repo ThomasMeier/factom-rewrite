@@ -11,5 +11,6 @@ structopt = "0.2.18"
 config = "0.9.3"
 slog = "^2"
 serde = { version = "1.0", features = ["derive"] }
-strum = "0.15.0"
-strum_macros = "0.15.0"
+
+[dev-dependencies]
+assert_cmd = "0.11"

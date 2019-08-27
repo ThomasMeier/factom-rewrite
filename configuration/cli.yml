@@ -17,17 +17,17 @@ args:
         takes_value: true
     - node_key_env:
         short: k
-        long: node_key_env
+        long: node-key-env
         takes_value: true
     - walletd_user:
         long: walletd-user
         takes_value: true
     - walletd_env_var:
         long: walletd-env-var
+        takes_value: true
     - disable_rpc:
         short: d
         long: disable-rpc
-        takes_value: true
     - rpc_addr:
         long: rpc-addr
         takes_value: true
