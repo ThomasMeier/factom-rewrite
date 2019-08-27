@@ -7,15 +7,23 @@
 //! 
 use primitives::{ed25519, sr25519, Pair};
 use substrate_service;
+use factomd_runtime::{	
+	AccountId, GenesisConfig, ConsensusConfig, TimestampConfig, BalancesConfig,
+	SudoConfig, IndicesConfig,
+	};
 use ed25519::Public as AuthorityId;
+
+pub type ChainSpec = substrate_service::ChainSpec<GenesisConfig>;
 
 /// Alternatives available for network
 #[derive(Clone, Debug)]
-pub enum ChainSpec {
+pub enum Alternative {
 	// A single authority node "Alice" for public networking availability
 	Development,
 	// Five public test accounts are available for localhost nodes, 2 authorities
 	LocalTestnet,
+	// Staging test net
+	StagingTestnet,
 }
 
 /// Get AuthorityId from str
@@ -87,11 +95,34 @@ impl Alternative {
 				None,
 				None
 			),
+			Alternative::StagingTestnet => ChainSpec::from_genesis(
+				"Staging Testnet",
+				"staging_testnet",
+				|| make_genesis(vec![
+					authority_key("Alice"),
+					authority_key("Bob"),
+				], vec![
+					account_key("Alice"),
+					account_key("Bob"),
+					account_key("Charlie"),
+					account_key("Dave"),
+					account_key("Eve"),
+					account_key("Ferdie"),
+				],
+					account_key("Alice"),
+				),
+				vec![],
+				None,
+				None,
+				None,
+				None
+			),
 		})
 	}
 	/// Get spec based on str provided from factomd-configuration
 	pub(crate) fn from(s: &str) -> Option<Self> {
 		match s {
+			"staging" => Some(Alternative::StagingTestnet),
 			"dev" => Some(Alternative::Development),
 			"" | "local" => Some(Alternative::LocalTestnet),
 			_ => None,
@@ -99,14 +130,14 @@ impl Alternative {
 	}
 }
 
-/// Make hardcoded genesis
+/// Make hardcoded genesis block
 /// 
 /// This is also possible via json, however the wasm blob will get thrown in. This 
 /// should help keep things compact by simply hardcoding the genesis.
 fn make_genesis(initial_authorities: Vec<AuthorityId>, endowed_accounts: Vec<AccountId>, root_key: AccountId) -> GenesisConfig {
 	GenesisConfig {
 		consensus: Some(ConsensusConfig {
-			code: include_bytes!("../runtime/wasm/target/wasm32-unknown-unknown/release/factomd_runtime_wasm.compact.wasm").to_vec(),
+			code: include_bytes!("../../runtime/wasm/target/wasm32-unknown-unknown/release/factom_runtime_wasm.compact.wasm").to_vec(),
 			authorities: initial_authorities.clone(),
 		}),
 		system: None,
@@ -117,7 +148,7 @@ fn make_genesis(initial_authorities: Vec<AuthorityId>, endowed_accounts: Vec<Acc
 			ids: endowed_accounts.clone(),
 		}),
 		balances: Some(BalancesConfig {
-			transaction_base_fee: 1,
+			transaction_base_fee: 0,
 			transaction_byte_fee: 0,
 			existential_deposit: 500,
 			transfer_fee: 0,
