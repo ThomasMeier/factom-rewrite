@@ -9,16 +9,16 @@
 
 use std::sync::Arc;
 use transaction_pool::{self, txpool::{Pool as TransactionPool}};
-use factom_runtime::{self, GenesisConfig, opaque::Block, RuntimeApi};
+use factomd_runtime::{self, GenesisConfig, opaque::Block, RuntimeApi};
 use substrate_service::{
 	FactoryFullConfiguration, LightComponents, FullComponents, FullBackend,
 	FullClient, LightClient, LightBackend, FullExecutor, LightExecutor,
 	TaskExecutor,
 };
-se basic_authorship::ProposerFactory;
+use basic_authorship::ProposerFactory;
 use consensus::{import_queue, start_aura, AuraImportQueue, SlotDuration, NothingExtra};
 use substrate_client as client;
-use primitives::{ed25519::Pair, Pair as PairT};
+use primitives::{ed25519::Pair};
 use inherents::InherentDataProviders;
 use network::construct_simple_protocol;
 use substrate_executor::native_executor_instance;
@@ -26,12 +26,12 @@ use substrate_service::construct_service_factory;
 
 pub use substrate_executor::NativeExecutor;
 
-/// Create executor, provide a WASM binary
+// Create executor, provide a WASM binary
 native_executor_instance!(
 	pub Executor,
-	factom_runtime::api::dispatch,
-	factom_runtime::native_version,
-	include_bytes!("../runtime/wasm/target/wasm32-unknown-unknown/release/runtime_wasm.compact.wasm")
+	factomd_runtime::api::dispatch,
+	factomd_runtime::native_version,
+	include_bytes!("../../runtime/wasm/target/wasm32-unknown-unknown/release/factom_runtime_wasm.compact.wasm")
 );
 
 /// Inherent providers
@@ -40,14 +40,14 @@ pub struct NodeConfig {
 	inherent_data_providers: InherentDataProviders,
 }
 
-/// Build P2P networking system
+// Build P2P networking system
 construct_simple_protocol! {
 	pub struct NodeProtocol where Block = Block { }
 }
 
-/// Service Factory
-/// 
-/// Will create a new Substrate service based on the role of the server.
+// Service Factory
+// 
+// Will create a new Substrate service based on the role of the server.
 construct_service_factory! {
 	struct Factory {
 		Block = Block,
@@ -102,7 +102,6 @@ construct_service_factory! {
 						client,
 						NothingExtra,
 						config.custom.inherent_data_providers.clone(),
-					true,
 					).map_err(Into::into)
 				}
 			},
@@ -117,7 +116,6 @@ construct_service_factory! {
 						client,
 						NothingExtra,
 						config.custom.inherent_data_providers.clone(),
-					true,
 					).map_err(Into::into)
 				}
 			},
