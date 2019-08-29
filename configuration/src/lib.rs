@@ -133,13 +133,10 @@ pub struct FactomConfig {
     pub walletd: Walletd,
 
     /// Generate completions
-    #[structopt(
-        long = "completions",
-        raw(possible_values = "&Shell::variants()"),
-    )]
+    #[structopt(long = "completions", raw(possible_values = "&Shell::variants()"))]
     pub completions: Option<String>,
 }
-    
+
 /// Factom Configuration has a specific override order
 /// Higher precedence -> lower precedence
 /// CLI Args -> Environment Vars -> Custom Config -> default_config.yml
@@ -157,7 +154,7 @@ impl FactomConfig {
         // If a completions argument is provided, dump shell completion to stdout
         if let Some(completion) = cli_args.completions {
             FactomConfig::completions_to_stdout(&completion);
-        } 
+        }
 
         let file_args = FactomConfig::load_from_path(&cli_args.custom_config)?;
         let final_config = FactomConfig::check_cli(matches, file_args);
@@ -282,17 +279,26 @@ mod tests {
     // Ensure check_cli() function overwrites config file values.
     fn test_check_cli() {
         let file_args = FactomConfig::load_from_path("tests/nondefaults.yml").unwrap();
-        let vec = vec!["factomd",
-                        "--role", "AUTHORITY",
-                        "--rpc-port", "8099",
-                       "--rpc-addr", "8.8.8.8",
-                       "--disable-rpc",
-                       "--network", "custom",
-                       "--node-key-env", "NODE_KEY_EXAMPLE",
-                       "--walletd-user", "USER123",
-                       "--walletd-env-var", "WALLETD_ENV",
-                       "--log-level", "WARN"
-                       ];
+        let vec = vec![
+            "factomd",
+            "--role",
+            "AUTHORITY",
+            "--rpc-port",
+            "8099",
+            "--rpc-addr",
+            "8.8.8.8",
+            "--disable-rpc",
+            "--network",
+            "custom",
+            "--node-key-env",
+            "NODE_KEY_EXAMPLE",
+            "--walletd-user",
+            "USER123",
+            "--walletd-env-var",
+            "WALLETD_ENV",
+            "--log-level",
+            "WARN",
+        ];
 
         let yaml = load_yaml!("../cli.yml");
         let app = App::from_yaml(yaml);
@@ -310,6 +316,5 @@ mod tests {
         assert_eq!(final_config.walletd.walletd_user, "USER123");
         assert_eq!(final_config.walletd.walletd_env_var, "WALLETD_ENV");
         assert_eq!(final_config.log.log_level, LogLevel::WARN);
-
     }
 }
