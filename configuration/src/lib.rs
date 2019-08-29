@@ -91,7 +91,7 @@ pub struct Walletd {
 #[derive(StructOpt, Debug, Deserialize)]
 pub struct Server {
     /// Set network to join
-    #[structopt(short = "n", long = "network", default_value = "main")]
+    #[structopt(short = "n", long = "network", default_value = "local")]
     pub network: String,
 
     /// Environment variable to source for your node_key
@@ -106,6 +106,14 @@ pub struct Server {
     /// Environment variable to source for your node_key
     #[structopt(long = "node-key-env", short = "k", default_value = "")]
     pub node_key_env: String,
+
+    /// Port number for factomd to use
+    #[structopt(long = "port", default_value = "30333")]
+    pub port: u16,
+
+    /// Bootnodes to get into the network
+    #[structopt(long = "bootnodes", default_value = "")]
+    pub bootnodes: String,
 }
 
 /// FactomConfig used for setting up your Factom node
@@ -202,6 +210,16 @@ impl FactomConfig {
                 config.server.node_key_env = value.to_string();
             }
         }
+        if matches.occurrences_of("port") > 0 {
+            if let Some(value) = matches.value_of("port") {
+                config.server.port = value.parse::<u16>().expect("Invalid port value!");
+            }
+        }
+        if matches.occurrences_of("bootnodes") > 0 {
+            if let Some(value) = matches.value_of("bootnodes") {
+                config.server.bootnodes = value.to_string();
+            }
+        }
         if matches.occurrences_of("log_level") > 0 {
             if let Some(value) = matches.value_of("log_level") {
                 config.log.log_level = value.parse::<LogLevel>().expect("Invalid log level!");
@@ -257,12 +275,14 @@ mod tests {
 
         assert_eq!(config.rpc.rpc_addr, "127.0.0.1");
         assert_eq!(config.rpc.rpc_port, 8088);
-        assert_eq!(config.server.network, "main");
+        assert_eq!(config.server.network, "local");
         assert_eq!(config.log.log_level, LogLevel::DEBUG);
         assert_eq!(config.walletd.walletd_user, "");
         assert_eq!(config.walletd.walletd_env_var, "");
         assert_eq!(config.server.role, Role::FULL);
         assert_eq!(config.server.node_key_env, "");
+        assert_eq!(config.server.port, 30333);
+        assert_eq!(config.server.bootnodes, "");
     }
 
     #[test]
@@ -276,6 +296,8 @@ mod tests {
         assert_eq!(nondefault_config.walletd.walletd_env_var, "TEST");
         assert_eq!(nondefault_config.server.role, Role::LIGHT);
         assert_eq!(nondefault_config.server.node_key_env, "FACTOMD_NODE_KEY");
+        assert_eq!(nondefault_config.server.port, 30334);
+        assert_eq!(nondefault_config.server.bootnodes, "/ip4/127.0.0.1/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR");
     }
 
     #[test]
@@ -285,13 +307,15 @@ mod tests {
         let vec = vec!["factomd",
                         "--role", "AUTHORITY",
                         "--rpc-port", "8099",
-                       "--rpc-addr", "8.8.8.8",
-                       "--disable-rpc",
-                       "--network", "custom",
-                       "--node-key-env", "NODE_KEY_EXAMPLE",
-                       "--walletd-user", "USER123",
-                       "--walletd-env-var", "WALLETD_ENV",
-                       "--log-level", "WARN"
+                        "--rpc-addr", "8.8.8.8",
+                        "--disable-rpc",
+                        "--network", "custom",
+                        "--node-key-env", "NODE_KEY_EXAMPLE",
+                        "--walletd-user", "USER123",
+                        "--walletd-env-var", "WALLETD_ENV",
+                        "--log-level", "WARN",
+                        "--port", "30335",
+                        "--bootnodes", "/ip4/127.0.0.1/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR"
                        ];
 
         let yaml = load_yaml!("../cli.yml");
@@ -310,6 +334,8 @@ mod tests {
         assert_eq!(final_config.walletd.walletd_user, "USER123");
         assert_eq!(final_config.walletd.walletd_env_var, "WALLETD_ENV");
         assert_eq!(final_config.log.log_level, LogLevel::WARN);
+        assert_eq!(final_config.server.port, 30334);
+        assert_eq!(final_config.server.bootnodes, "/ip4/127.0.0.1/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR");
 
     }
 }

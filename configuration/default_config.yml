@@ -3,9 +3,11 @@
 # The configuration is from a merge order of:
 # This file -> custom config -> CLI options
 server:
-  network: "main"
+  network: "local"
   role: "full" # ["full", "light", "authority"]
   node_key_env: "" # factomd will use this env var to find your node key 
+  port: 30333
+  bootnodes: ""
 
 rpc:
   disable_rpc: false

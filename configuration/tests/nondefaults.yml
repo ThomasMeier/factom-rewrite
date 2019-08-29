@@ -3,6 +3,8 @@ server:
   network: "test"
   role: "light" # ["full", "light", "authority"]
   node_key_env: "FACTOMD_NODE_KEY" # factomd will use this env var to find your node key 
+  port: 30334
+  bootnodes: "/ip4/127.0.0.1/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR"
 
 rpc:
   disable_rpc: true

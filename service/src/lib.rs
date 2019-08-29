@@ -39,7 +39,7 @@ fn make_logger(log_config: &Log) -> Logger {
 }
 
 /// Start the API server
-fn start_rpc_server(log: Logger, config: &FactomConfig) {
+fn start_rpc_server(log: &Logger, config: &FactomConfig) {
       // Start HTTP RPC if enabled
     if !config.rpc.disable_rpc {
         info!(log, "HTTP RPC server enabled"; "addr" => &config.rpc.rpc_addr, "port" => &config.rpc.rpc_port);
@@ -49,16 +49,66 @@ fn start_rpc_server(log: Logger, config: &FactomConfig) {
     }
 }
 
+/// # Create Substrate-specific args
+/// 
+/// The issue is that susbtrate selects a chain spec to use
+/// based on cli args provided by the user. We can't simply pass
+/// FactomConfig over to substrate, they want strings typed by
+/// the user. 
+/// 
+/// So this is a workaround. 
+/// 
+/// The function `substrate-cli::parse_and_execute` takes those args 
+/// down in our `run` fn. It is possible to pass our own structopt, 
+/// but this leads to collisions with how they've named some options. 
+/// 
+/// That would be preferable. The biggest barrier for us to overcome is 
+/// the setting of rpc port, addr, and disabled. Because we will have 
+/// an rpc server for backward compatibility with existing Factom 
+/// clients. And substrate will try to launch its own rpc server, 
+/// which in production will be disabled.
+/// 
+/// (End users would then see options to set rpc port for
+/// the OOTB Substrate and the rpc port for legacy rpc server. Not cool.)
+/// 
+/// `create_substrate_args` will take FactomConfig and turn it into
+/// a vector for use as args by substrate-cli. Those settings include: 
+/// 
+/// * Chain/Network to join
+/// * Node key for the node to use when in validator role
+/// * Set Validator mode when in validator role
+fn create_substrate_args(log: &Logger, factom_config: &FactomConfig) -> Vec<String> {
+	let node_key;
+	let mut args = Vec::new();
+	args.push("_".to_string());
+
+	if factom_config.server.role == Role::AUTHORITY {
+		node_key = std::env::var(&factom_config.server.node_key_env).unwrap_or_else(|_| {
+			error!(log, "Unable to find node key from environment variable supplied"; "node_key_env" => &factom_config.server.node_key_env);
+			panic!("Failed to find node key")
+		});
+		args.push("--validator".to_string());
+		args.push("--node-key".to_string());
+		args.push(node_key);
+	}
+	
+	args.push("--chain=".to_string() + &factom_config.server.network);
+	args
+}
+
 /// Start new node
 pub fn run(factom_config: FactomConfig) -> Result<(), substrate_cli::error::Error> {
-    let log = make_logger(&factom_config.log);
-    start_rpc_server(log, &factom_config);
-    let runtime = Runtime::new().map_err(|e| format!("{:?}", e))?;
+	let log = make_logger(&factom_config.log);
+	let runtime = Runtime::new().map_err(|e| format!("{:?}", e))?;
 	let executor = runtime.executor();
+	let args = create_substrate_args(&log, &factom_config);
 
-    let version = VersionInfo {
+	// Entry for legacy RPC server
+	start_rpc_server(&log, &factom_config);
+
+	let version = VersionInfo {
 		name: "Substrate Node",
-        commit: env!("VERGEN_SHA_SHORT"),
+				commit: env!("VERGEN_SHA_SHORT"),
 		version: env!("CARGO_PKG_VERSION"),
 		executable_name: "factomd",
 		author: "tom",
@@ -66,21 +116,21 @@ pub fn run(factom_config: FactomConfig) -> Result<(), substrate_cli::error::Erro
 		support_url: "https://github.com/ThomasMeier/factom-rewrite",
 	};
 
-    parse_and_execute::<wrapper::Factory, NoCustom, NoCustom, _, _, _, _, _>(
-        load_spec, &version, "factom-node", ::std::env::args(), Exit,
-        |exit, _custom_args, config| {
-        match &factom_config.server.role {
-            Role::LIGHT => run_until_exit(
-                runtime,
-                wrapper::Factory::new_light(config, executor).map_err(|e| format!("{:?}", e))?,
-                exit),
-            _ => run_until_exit(
-                runtime,
-                wrapper::Factory::new_full(config, executor).map_err(|e| format!("{:?}", e))?,
-                exit),
-        }.map_err(|e| format!("{:?}", e))
-        }
-    ).map_err(Into::into).map(|_| ())
+	parse_and_execute::<wrapper::Factory, NoCustom, NoCustom, _, _, _, _, _>(
+			load_spec, &version, "factom-node", args, Exit,
+			|exit, _custom_args, config| {
+				match &factom_config.server.role {
+						Role::LIGHT => run_until_exit(
+								runtime,
+								wrapper::Factory::new_light(config, executor).map_err(|e| format!("{:?}", e))?,
+								exit),
+						_ => run_until_exit(
+								runtime,
+								wrapper::Factory::new_full(config, executor).map_err(|e| format!("{:?}", e))?,
+								exit),
+					}.map_err(|e| format!("{:?}", e))
+			}
+	).map_err(Into::into).map(|_| ())
 }
 
 fn load_spec(id: &str) -> Result<Option<chain_spec::ChainSpec>, String> {
