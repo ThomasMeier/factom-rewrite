@@ -20,12 +20,12 @@ decl_module! {
     /// Send factoids from one address to another address. Right now there is not
     /// an imposed transfer fee.
     fn transfer_factoids(origin, to: T::AccountId, value: T::Balance) -> Result {
-            let sender = ensure_signed(origin)?;
+        let sender = ensure_signed(origin)?;
 
-      // Simple transfer
-      <balances::Module<T> as Currency<_>>::transfer(&sender, &to, value)?;
+        // Simple transfer
+        <balances::Module<T> as Currency<_>>::transfer(&sender, &to, value)?;
 
-      Ok(())
+        Ok(())
     }
 
     /// Convert factoids to entry credits
@@ -38,22 +38,22 @@ decl_module! {
     /// Factoids are slashed from the account upon purchase. Imbalance is ignored.
     /// Presently, the result of the increase is also ignored until we implement
     /// Events for these modules.
-        fn buy_entry_credits(origin, to_ec_addr: Public, value: T::Balance) -> Result {
-            let sender = ensure_signed(origin)?;
+    fn buy_entry_credits(origin, to_ec_addr: Public, value: T::Balance) -> Result {
+        let sender = ensure_signed(origin)?;
 
-      // Check if there is enough free balance for requested exchange
-      let can_slash = <balances::Module<T> as Currency<_>>::can_slash(&sender, value);
+        // Check if there is enough free balance for requested exchange
+        let can_slash = <balances::Module<T> as Currency<_>>::can_slash(&sender, value);
 
-      if can_slash {
-        // remove requested amounmt
-        let _imbalance = <balances::Module<T> as Currency<_>>::slash(&sender, value);
-        // Conversion necessary from Balance to rust primitive
-        let value_as = value.as_();
-        let _increased_ec = <EntryCredits>::increase_ec_balance(to_ec_addr, value_as.into());
-      }
-
-            Ok(())
+        if can_slash {
+            // remove requested amounmt
+            let _imbalance = <balances::Module<T> as Currency<_>>::slash(&sender, value);
+            // Conversion necessary from Balance to rust primitive
+            let value_as = value.as_();
+            let _increased_ec = <EntryCredits>::increase_ec_balance(to_ec_addr, value_as.into());
         }
 
+        Ok(())
     }
+
+}
 }
