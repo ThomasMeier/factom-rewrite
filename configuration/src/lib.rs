@@ -27,12 +27,13 @@ use structopt::StructOpt;
 arg_enum! {
     #[derive(Debug, Deserialize, PartialEq)]
     pub enum LogLevel {
-        CRITICAL,
-        ERROR,
-        WARN,
-        INFO,
+        TRACE,
         DEBUG,
-        TRACE
+        INFO,
+        WARN,
+        ERROR,
+        CRITICAL,
+        SILENT,
     }
 }
 
@@ -152,7 +153,7 @@ impl FactomConfig {
         let cli_args = FactomConfig::from_args();
 
         // If a completions argument is provided, dump shell completion to stdout
-        if let Some(completion) = cli_args.completions {
+        if let Some(completion) = &cli_args.completions {
             FactomConfig::completions_to_stdout(&completion);
         }
 
