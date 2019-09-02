@@ -81,11 +81,14 @@ pub fn run(factom_config: FactomConfig) -> Result<(), substrate_cli::error::Erro
         support_url: "https://github.com/ThomasMeier/factom-rewrite",
     };
 
+    // Empty vector to pass to substrate factory as a placeholder.
+    let substrate_args: Vec<String> = std::vec::Vec::new();
+
     parse_and_execute::<wrapper::Factory, NoCustom, NoCustom, _, _, _, _, _>(
         load_spec,
         &version,
         "factom-node",
-        ::std::env::args(),
+        substrate_args,
         Exit,
         |exit, _custom_args, config| {
             match &factom_config.server.role {
@@ -106,6 +109,7 @@ pub fn run(factom_config: FactomConfig) -> Result<(), substrate_cli::error::Erro
     )
     .map_err(Into::into)
     .map(|_| ())
+    // Ok(())
 }
 
 fn load_spec(id: &str) -> Result<Option<chain_spec::ChainSpec>, String> {
