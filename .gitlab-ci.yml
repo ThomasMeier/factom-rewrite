@@ -1,4 +1,4 @@
-image: 'tomjm/rustclang:0.1'
+image: 'tomjm/rustclang:0.2'
 
 # Waiting to observe how CI works and were errors tend to be caught
 # Will look at parallelization after enough samples are taken
