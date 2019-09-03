@@ -2,6 +2,7 @@ use assert_cmd::prelude::*;
 use std::process::Command;
 
 #[test]
+#[ignore]
 fn test_role() {
     let mut cmd1 = Command::cargo_bin("factomd").unwrap();
     let mut cmd2 = Command::cargo_bin("factomd").unwrap();
@@ -18,6 +19,7 @@ fn test_role() {
 }
 
 #[test]
+#[ignore]
 fn test_completions() {
     let elvish_output = "
 edit:completion:arg-completer[factomd-configuration] = [@words]{
@@ -80,6 +82,7 @@ edit:completion:arg-completer[factomd-configuration] = [@words]{
 }
 
 #[test]
+#[ignore]
 fn test_rpc() {
     let mut cmd1 = Command::cargo_bin("factomd").unwrap();
     let mut cmd2 = Command::cargo_bin("factomd").unwrap();
@@ -107,6 +110,7 @@ fn test_rpc() {
 }
 
 #[test]
+#[ignore]
 fn test_log_level() {
     let mut cmd1 = Command::cargo_bin("factomd").unwrap();
     let mut cmd2 = Command::cargo_bin("factomd").unwrap();
@@ -129,6 +133,7 @@ fn test_log_level() {
 }
 
 #[test]
+#[ignore]
 fn test_walletd() {
     let mut cmd1 = Command::cargo_bin("factomd").unwrap();
     let mut cmd2 = Command::cargo_bin("factomd").unwrap();
@@ -153,6 +158,7 @@ fn test_walletd() {
 }
 
 #[test]
+#[ignore]
 fn test_network() {
     let mut cmd1 = Command::cargo_bin("factomd").unwrap();
     let mut cmd2 = Command::cargo_bin("factomd").unwrap();
@@ -169,6 +175,7 @@ fn test_network() {
 }
 
 #[test]
+#[ignore]
 fn test_node_key_env() {
     let mut cmd1 = Command::cargo_bin("factomd").unwrap();
 
@@ -179,6 +186,7 @@ fn test_node_key_env() {
 }
 
 #[test]
+#[ignore]
 fn test_config_arg() {
     let mut cmd1 = Command::cargo_bin("factomd").unwrap();
     let mut cmd2 = Command::cargo_bin("factomd").unwrap();

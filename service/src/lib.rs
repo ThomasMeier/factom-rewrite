@@ -12,7 +12,7 @@ extern crate slog_async;
 extern crate slog_term;
 
 use core::str::FromStr;
-use factomd_configuration::{FactomConfig, Log, Role};
+use factomd_configuration::{FactomConfig, Log, LogLevel, Role};
 use futures::{future, sync::oneshot, Future};
 use slog::Drain;
 use slog::Logger;
@@ -40,20 +40,34 @@ fn make_logger(log_config: &Log) -> Logger {
 }
 
 /// Start the API server
-fn start_rpc_server(log: Logger, config: &FactomConfig) {
-    // Start HTTP RPC if enabled
-    if !config.rpc.disable_rpc {
-        info!(log, "HTTP RPC server enabled"; "addr" => &config.rpc.rpc_addr, "port" => &config.rpc.rpc_port);
-        factomd_rpc::start_rpc_server(&config.rpc.rpc_addr, config.rpc.rpc_port);
-    } else {
-        info!(log, "HTTP RPC Server disabled");
+fn start_rpc_server(log_option: Option<Logger>, config: &FactomConfig) {
+    match log_option {
+        Some(log) => {
+            // Start HTTP RPC if enabled
+            if !config.rpc.disable_rpc {
+                info!(log, "HTTP RPC server enabled"; "addr" => &config.rpc.rpc_addr, "port" => &config.rpc.rpc_port);
+                factomd_rpc::start_rpc_server(&config.rpc.rpc_addr, config.rpc.rpc_port);
+            } else {
+                info!(log, "HTTP RPC Server disabled");
+            }
+        }
+        None => {
+            if !config.rpc.disable_rpc {
+                factomd_rpc::start_rpc_server(&config.rpc.rpc_addr, config.rpc.rpc_port);
+            }
+        }
     }
 }
 
 /// Start new node
 pub fn run(factom_config: FactomConfig) -> Result<(), substrate_cli::error::Error> {
-    let log = make_logger(&factom_config.log);
-    start_rpc_server(log, &factom_config);
+    // Build logger except if variant is OFF.
+    let log_option = match &factom_config.log.log_level {
+        LogLevel::SILENT => None,
+        _ => Some(make_logger(&factom_config.log)),
+    };
+
+    start_rpc_server(log_option, &factom_config);
     let runtime = Runtime::new().map_err(|e| format!("{:?}", e))?;
     let executor = runtime.executor();
 
@@ -67,11 +81,14 @@ pub fn run(factom_config: FactomConfig) -> Result<(), substrate_cli::error::Erro
         support_url: "https://github.com/ThomasMeier/factom-rewrite",
     };
 
+    // Empty vector to pass to substrate factory as a placeholder.
+    let substrate_args: Vec<String> = std::vec::Vec::new();
+
     parse_and_execute::<wrapper::Factory, NoCustom, NoCustom, _, _, _, _, _>(
         load_spec,
         &version,
         "factom-node",
-        ::std::env::args(),
+        substrate_args,
         Exit,
         |exit, _custom_args, config| {
             match &factom_config.server.role {
@@ -92,6 +109,7 @@ pub fn run(factom_config: FactomConfig) -> Result<(), substrate_cli::error::Erro
     )
     .map_err(Into::into)
     .map(|_| ())
+    // Ok(())
 }
 
 fn load_spec(id: &str) -> Result<Option<chain_spec::ChainSpec>, String> {
