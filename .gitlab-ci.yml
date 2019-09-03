@@ -1,0 +1,37 @@
+image: 'tomjm/rustclang:0.1'
+
+# Waiting to observe how CI works and were errors tend to be caught
+# Will look at parallelization after enough samples are taken
+stages:
+  - code-check
+  - test
+  - build
+
+code-check:
+  stage: code-check
+  script:
+    - scripts/init.sh
+    - scripts/build.sh
+    - cargo fmt -- --check
+    - cargo clippy -- -D warnings
+
+test:
+  stage: test
+  script:
+    - scripts/init.sh
+    - scripts/build.sh
+    - cargo test --all
+
+build:
+  stage: build
+  script:
+    - scripts/init.sh
+    - scripts/build.sh
+    - cargo build --release
+
+
+cache:
+  paths:
+    - apt/
+    - cargo/
+    - target/
