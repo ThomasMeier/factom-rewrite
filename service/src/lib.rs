@@ -59,6 +59,62 @@ fn start_rpc_server(log_option: Option<Logger>, config: &FactomConfig) {
     }
 }
 
+/// # Create Substrate-specific args
+///
+/// The issue is that susbtrate selects a chain spec to use
+/// based on cli args provided by the user. We can't simply pass
+/// FactomConfig over to substrate, they want strings typed by
+/// the user.
+///
+/// So this is a workaround.
+///
+/// The function `substrate-cli::parse_and_execute` takes those args
+/// down in our `run` fn. It is possible to pass our own structopt,
+/// but this leads to collisions with how they've named some options.
+///
+/// That would be preferable. The biggest barrier for us to overcome is
+/// the setting of rpc port, addr, and disabled. Because we will have
+/// an rpc server for backward compatibility with existing Factom
+/// clients. And substrate will try to launch its own rpc server,
+/// which in production will be disabled.
+///
+/// (End users would then see options to set rpc port for
+/// the OOTB Substrate and the rpc port for legacy rpc server. Not cool.)
+///
+/// `create_substrate_args` will take FactomConfig and turn it into
+/// a vector for use as args by substrate-cli. Those settings include:
+///
+/// * Chain/Network to join
+/// * Node key for the node to use when in validator role
+/// * Set Validator mode when in validator role
+fn create_substrate_args(factom_config: &FactomConfig) -> Vec<String> {
+    let node_key;
+    let mut args = Vec::new();
+    args.push("_".to_string());
+
+    if factom_config.server.role == Role::AUTHORITY {
+        node_key = std::env::var(&factom_config.server.node_key_env)
+            .unwrap_or_else(|_| panic!("Failed to find node key"));
+        args.push("--validator".to_string());
+        args.push("--node-key".to_string());
+        args.push(node_key);
+    }
+
+    if !factom_config.server.base_path.is_empty() {
+        args.push("--base-path".to_string());
+        args.push(factom_config.server.base_path.to_string());
+    }
+
+    args.push("--bootnodes".to_string());
+    args.push(factom_config.server.bootnodes.to_string());
+
+    args.push("--port".to_string());
+    args.push(factom_config.server.port.to_string());
+
+    args.push("--chain=".to_string() + &factom_config.server.network);
+    args
+}
+
 /// Start new node
 pub fn run(factom_config: FactomConfig) -> Result<(), substrate_cli::error::Error> {
     // Build logger except if variant is OFF.
@@ -82,7 +138,7 @@ pub fn run(factom_config: FactomConfig) -> Result<(), substrate_cli::error::Erro
     };
 
     // Empty vector to pass to substrate factory as a placeholder.
-    let substrate_args: Vec<String> = std::vec::Vec::new();
+    let substrate_args = create_substrate_args(&factom_config);
 
     parse_and_execute::<wrapper::Factory, NoCustom, NoCustom, _, _, _, _, _>(
         load_spec,
@@ -109,7 +165,6 @@ pub fn run(factom_config: FactomConfig) -> Result<(), substrate_cli::error::Erro
     )
     .map_err(Into::into)
     .map(|_| ())
-    // Ok(())
 }
 
 fn load_spec(id: &str) -> Result<Option<chain_spec::ChainSpec>, String> {

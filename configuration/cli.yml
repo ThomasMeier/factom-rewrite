@@ -24,6 +24,16 @@ args:
         long: log-level
         possible_values: [SILENT, CRITICAL, ERROR, WARN, INFO, DEBUG, TRACE]
         takes_value: true
+    - bootnodes:
+        long: bootnodes
+        takes_value: true
+    - base_path:
+        long: base-path
+        takes_value: true
+    - port:
+        short: p
+        long: port
+        takes_value: true
     - disable_rpc:
         short: d
         long: disable-rpc

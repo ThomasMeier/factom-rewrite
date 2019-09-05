@@ -46,6 +46,8 @@ edit:completion:arg-completer[factomd-configuration] = [@words]{
             cand --role 'Environment variable to source for your node_key'
             cand -k 'Environment variable to source for your node_key'
             cand --node-key-env 'Environment variable to source for your node_key'
+            cand --port 'Port to run node on for P2P'
+            cand --bootnodes 'Bootnodes to get into the network'
             cand -l 'l'
             cand --log-level 'log-level'
             cand --rpc-addr 'HTTP-RPC listening interface'
