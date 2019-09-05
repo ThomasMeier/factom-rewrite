@@ -1,28 +1,27 @@
 //! # Factom Service Wrapper
-//! 
+//!
 //! The blockchain operations for Factom start here. Other modules and crates
 //! are used for auxiliary services to connect users with a backwards compatible
 //! way to interact with substrate. This file transitions to strictly Substrate
 //! stuff.
-//! 
+//!
 #![warn(unused_extern_crates)]
 
-use std::sync::Arc;
-use transaction_pool::{self, txpool::{Pool as TransactionPool}};
-use factomd_runtime::{self, GenesisConfig, opaque::Block, RuntimeApi};
-use substrate_service::{
-	FactoryFullConfiguration, LightComponents, FullComponents, FullBackend,
-	FullClient, LightClient, LightBackend, FullExecutor, LightExecutor,
-	TaskExecutor,
-};
 use basic_authorship::ProposerFactory;
-use consensus::{import_queue, start_aura, AuraImportQueue, SlotDuration, NothingExtra};
-use substrate_client as client;
-use primitives::{ed25519::Pair};
+use consensus::{import_queue, start_aura, AuraImportQueue, NothingExtra, SlotDuration};
+use factomd_runtime::{self, opaque::Block, GenesisConfig, RuntimeApi};
 use inherents::InherentDataProviders;
 use network::construct_simple_protocol;
+use primitives::ed25519::Pair;
+use std::sync::Arc;
+use substrate_client as client;
 use substrate_executor::native_executor_instance;
 use substrate_service::construct_service_factory;
+use substrate_service::{
+    FactoryFullConfiguration, FullBackend, FullClient, FullComponents, FullExecutor, LightBackend,
+    LightClient, LightComponents, LightExecutor, TaskExecutor,
+};
+use transaction_pool::{self, txpool::Pool as TransactionPool};
 
 pub use substrate_executor::NativeExecutor;
 
@@ -37,87 +36,87 @@ native_executor_instance!(
 /// Inherent providers
 #[derive(Default)]
 pub struct NodeConfig {
-	inherent_data_providers: InherentDataProviders,
+    inherent_data_providers: InherentDataProviders,
 }
 
 // Build P2P networking system
 construct_simple_protocol! {
-	pub struct NodeProtocol where Block = Block { }
+    pub struct NodeProtocol where Block = Block { }
 }
 
 // Service Factory
-// 
+//
 // Will create a new Substrate service based on the role of the server.
 construct_service_factory! {
-	struct Factory {
-		Block = Block,
-		RuntimeApi = RuntimeApi,
-		NetworkProtocol = NodeProtocol { |config| Ok(NodeProtocol::new()) },
-		RuntimeDispatch = Executor,
-		FullTransactionPoolApi = transaction_pool::ChainApi<client::Client<FullBackend<Self>, FullExecutor<Self>, Block, RuntimeApi>, Block>
-			{ |config, client| Ok(TransactionPool::new(config, transaction_pool::ChainApi::new(client))) },
-		LightTransactionPoolApi = transaction_pool::ChainApi<client::Client<LightBackend<Self>, LightExecutor<Self>, Block, RuntimeApi>, Block>
-			{ |config, client| Ok(TransactionPool::new(config, transaction_pool::ChainApi::new(client))) },
-		Genesis = GenesisConfig,
-		Configuration = NodeConfig,
-		FullService = FullComponents<Self>
-			{ |config: FactoryFullConfiguration<Self>, executor: TaskExecutor|
-				FullComponents::<Factory>::new(config, executor)
-			},
-		AuthoritySetup = {
-			|service: Self::FullService, executor: TaskExecutor, key: Option<Arc<Pair>>| {
-				if let Some(key) = key {
-					let proposer = Arc::new(ProposerFactory {
-						client: service.client(),
-						transaction_pool: service.transaction_pool(),
-						inherents_pool: service.inherents_pool(),
-					});
-					let client = service.client();
-					executor.spawn(start_aura(
-						SlotDuration::get_or_compute(&*client)?,
-						key.clone(),
-						client.clone(),
-						client,
-						proposer,
-						service.network(),
-						service.on_exit(),
-						service.config.custom.inherent_data_providers.clone(),
-						service.config.force_authoring,
-					)?);
-				}
+    struct Factory {
+        Block = Block,
+        RuntimeApi = RuntimeApi,
+        NetworkProtocol = NodeProtocol { |config| Ok(NodeProtocol::new()) },
+        RuntimeDispatch = Executor,
+        FullTransactionPoolApi = transaction_pool::ChainApi<client::Client<FullBackend<Self>, FullExecutor<Self>, Block, RuntimeApi>, Block>
+            { |config, client| Ok(TransactionPool::new(config, transaction_pool::ChainApi::new(client))) },
+        LightTransactionPoolApi = transaction_pool::ChainApi<client::Client<LightBackend<Self>, LightExecutor<Self>, Block, RuntimeApi>, Block>
+            { |config, client| Ok(TransactionPool::new(config, transaction_pool::ChainApi::new(client))) },
+        Genesis = GenesisConfig,
+        Configuration = NodeConfig,
+        FullService = FullComponents<Self>
+            { |config: FactoryFullConfiguration<Self>, executor: TaskExecutor|
+                FullComponents::<Factory>::new(config, executor)
+            },
+        AuthoritySetup = {
+            |service: Self::FullService, executor: TaskExecutor, key: Option<Arc<Pair>>| {
+                if let Some(key) = key {
+                    let proposer = Arc::new(ProposerFactory {
+                        client: service.client(),
+                        transaction_pool: service.transaction_pool(),
+                        inherents_pool: service.inherents_pool(),
+                    });
+                    let client = service.client();
+                    executor.spawn(start_aura(
+                        SlotDuration::get_or_compute(&*client)?,
+                        key.clone(),
+                        client.clone(),
+                        client,
+                        proposer,
+                        service.network(),
+                        service.on_exit(),
+                        service.config.custom.inherent_data_providers.clone(),
+                        service.config.force_authoring,
+                    )?);
+                }
 
-				Ok(service)
-			}
-		},
-		LightService = LightComponents<Self>
-			{ |config, executor| <LightComponents<Factory>>::new(config, executor) },
-		FullImportQueue = AuraImportQueue<
-			Self::Block,
-		>
-			{ |config: &mut FactoryFullConfiguration<Self> , client: Arc<FullClient<Self>>| {
-				import_queue::<_, _, _, Pair>(
-						SlotDuration::get_or_compute(&*client)?,
-						client.clone(),
-						None,
-						client,
-						NothingExtra,
-						config.custom.inherent_data_providers.clone(),
-					).map_err(Into::into)
-				}
-			},
-		LightImportQueue = AuraImportQueue<
-			Self::Block,
-		>
-			{ |config: &mut FactoryFullConfiguration<Self>, client: Arc<LightClient<Self>>| {
-				import_queue::<_, _, _, Pair>(
-						SlotDuration::get_or_compute(&*client)?,
-						client.clone(),
-						None,
-						client,
-						NothingExtra,
-						config.custom.inherent_data_providers.clone(),
-					).map_err(Into::into)
-				}
-			},
-	}
+                Ok(service)
+            }
+        },
+        LightService = LightComponents<Self>
+            { |config, executor| <LightComponents<Factory>>::new(config, executor) },
+        FullImportQueue = AuraImportQueue<
+            Self::Block,
+        >
+            { |config: &mut FactoryFullConfiguration<Self> , client: Arc<FullClient<Self>>| {
+                import_queue::<_, _, _, Pair>(
+                        SlotDuration::get_or_compute(&*client)?,
+                        client.clone(),
+                        None,
+                        client,
+                        NothingExtra,
+                        config.custom.inherent_data_providers.clone(),
+                    ).map_err(Into::into)
+                }
+            },
+        LightImportQueue = AuraImportQueue<
+            Self::Block,
+        >
+            { |config: &mut FactoryFullConfiguration<Self>, client: Arc<LightClient<Self>>| {
+                import_queue::<_, _, _, Pair>(
+                        SlotDuration::get_or_compute(&*client)?,
+                        client.clone(),
+                        None,
+                        client,
+                        NothingExtra,
+                        config.custom.inherent_data_providers.clone(),
+                    ).map_err(Into::into)
+                }
+            },
+    }
 }

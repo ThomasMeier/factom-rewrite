@@ -19,11 +19,20 @@ args:
         short: k
         long: node-key-env
         takes_value: true
-    - walletd_user:
-        long: walletd-user
+    - log_level:
+        short: l
+        long: log-level
+        possible_values: [SILENT, CRITICAL, ERROR, WARN, INFO, DEBUG, TRACE]
         takes_value: true
-    - walletd_env_var:
-        long: walletd-env-var
+    - bootnodes:
+        long: bootnodes
+        takes_value: true
+    - base_path:
+        long: base-path
+        takes_value: true
+    - port:
+        short: p
+        long: port
         takes_value: true
     - disable_rpc:
         short: d
@@ -34,10 +43,11 @@ args:
     - rpc_port:
         long: rpc-port
         takes_value: true
-    - log_level:
-        short: l
-        long: log-level
-        possible_values: [OFF, CRITICAL, ERROR, WARN, INFO, DEBUG, TRACE]
+    - walletd_user:
+        long: walletd-user
+        takes_value: true
+    - walletd_env_var:
+        long: walletd-env-var
         takes_value: true
     - completions:
         long: completions

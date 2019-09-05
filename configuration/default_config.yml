@@ -8,6 +8,7 @@ server:
   node_key_env: "" # factomd will use this env var to find your node key 
   port: 30333
   bootnodes: ""
+  base_path: ""
 
 rpc:
   disable_rpc: false

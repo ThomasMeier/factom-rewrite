@@ -27,12 +27,13 @@ use structopt::StructOpt;
 arg_enum! {
     #[derive(Debug, Deserialize, PartialEq)]
     pub enum LogLevel {
-        CRITICAL,
-        ERROR,
-        WARN,
-        INFO,
+        TRACE,
         DEBUG,
-        TRACE
+        INFO,
+        WARN,
+        ERROR,
+        CRITICAL,
+        SILENT,
     }
 }
 
@@ -114,6 +115,10 @@ pub struct Server {
     /// Bootnodes to get into the network
     #[structopt(long = "bootnodes", default_value = "")]
     pub bootnodes: String,
+
+    /// Base path for database
+    #[structopt(long = "base-path", default_value = "")]
+    pub base_path: String,
 }
 
 /// FactomConfig used for setting up your Factom node
@@ -141,13 +146,10 @@ pub struct FactomConfig {
     pub walletd: Walletd,
 
     /// Generate completions
-    #[structopt(
-        long = "completions",
-        raw(possible_values = "&Shell::variants()"),
-    )]
+    #[structopt(long = "completions", raw(possible_values = "&Shell::variants()"))]
     pub completions: Option<String>,
 }
-    
+
 /// Factom Configuration has a specific override order
 /// Higher precedence -> lower precedence
 /// CLI Args -> Environment Vars -> Custom Config -> default_config.yml
@@ -163,9 +165,9 @@ impl FactomConfig {
         let cli_args = FactomConfig::from_args();
 
         // If a completions argument is provided, dump shell completion to stdout
-        if let Some(completion) = cli_args.completions {
+        if let Some(completion) = &cli_args.completions {
             FactomConfig::completions_to_stdout(&completion);
-        } 
+        }
 
         let file_args = FactomConfig::load_from_path(&cli_args.custom_config)?;
         let final_config = FactomConfig::check_cli(matches, file_args);
@@ -218,6 +220,11 @@ impl FactomConfig {
         if matches.occurrences_of("bootnodes") > 0 {
             if let Some(value) = matches.value_of("bootnodes") {
                 config.server.bootnodes = value.to_string();
+            }
+        }
+        if matches.occurrences_of("base_path") > 0 {
+            if let Some(value) = matches.value_of("base_path") {
+                config.server.base_path = value.to_string();
             }
         }
         if matches.occurrences_of("log_level") > 0 {
@@ -297,26 +304,43 @@ mod tests {
         assert_eq!(nondefault_config.server.role, Role::LIGHT);
         assert_eq!(nondefault_config.server.node_key_env, "FACTOMD_NODE_KEY");
         assert_eq!(nondefault_config.server.port, 30334);
-        assert_eq!(nondefault_config.server.bootnodes, "/ip4/127.0.0.1/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR");
+        assert_eq!(
+            nondefault_config.server.bootnodes,
+            "/ip4/127.0.0.1/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR"
+        );
+        assert_eq!(nondefault_config.server.base_path, "/tmp/db");
     }
 
     #[test]
     // Ensure check_cli() function overwrites config file values.
     fn test_check_cli() {
         let file_args = FactomConfig::load_from_path("tests/nondefaults.yml").unwrap();
-        let vec = vec!["factomd",
-                        "--role", "AUTHORITY",
-                        "--rpc-port", "8099",
-                        "--rpc-addr", "8.8.8.8",
-                        "--disable-rpc",
-                        "--network", "custom",
-                        "--node-key-env", "NODE_KEY_EXAMPLE",
-                        "--walletd-user", "USER123",
-                        "--walletd-env-var", "WALLETD_ENV",
-                        "--log-level", "WARN",
-                        "--port", "30335",
-                        "--bootnodes", "/ip4/127.0.0.1/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR"
-                       ];
+        let vec = vec![
+            "factomd",
+            "--role",
+            "AUTHORITY",
+            "--rpc-port",
+            "8099",
+            "--rpc-addr",
+            "8.8.8.8",
+            "--disable-rpc",
+            "--network",
+            "custom",
+            "--node-key-env",
+            "NODE_KEY_EXAMPLE",
+            "--walletd-user",
+            "USER123",
+            "--walletd-env-var",
+            "WALLETD_ENV",
+            "--log-level",
+            "WARN",
+            "--port",
+            "30334",
+            "--bootnodes",
+            "/ip4/127.0.0.1/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR",
+            "--base-path",
+            "/tmp/db",
+        ];
 
         let yaml = load_yaml!("../cli.yml");
         let app = App::from_yaml(yaml);
@@ -335,7 +359,10 @@ mod tests {
         assert_eq!(final_config.walletd.walletd_env_var, "WALLETD_ENV");
         assert_eq!(final_config.log.log_level, LogLevel::WARN);
         assert_eq!(final_config.server.port, 30334);
-        assert_eq!(final_config.server.bootnodes, "/ip4/127.0.0.1/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR");
-
+        assert_eq!(
+            final_config.server.bootnodes,
+            "/ip4/127.0.0.1/tcp/30333/p2p/QmRpheLN4JWdAnY7HGJfWFNbfkQCb6tFf4vvA6hgjMZKrR"
+        );
+        assert_eq!(final_config.server.base_path, "/tmp/db");
     }
 }
