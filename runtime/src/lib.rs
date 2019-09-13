@@ -68,6 +68,9 @@ mod factoid;
 /// Include Entry Credits
 mod entry_credit;
 
+/// Include Entry
+mod entry;
+
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
@@ -222,6 +225,9 @@ impl factoid::Trait for Runtime {}
 /// Used for the module entry_credit
 impl entry_credit::Trait for Runtime {}
 
+/// Used for the module entry 
+impl entry::Trait for Runtime {}
+
 construct_runtime!(
 	pub enum Runtime with Log(InternalLog: DigestItem<Hash, AuthorityId, AuthoritySignature>) where
 		Block = Block,
@@ -238,6 +244,7 @@ construct_runtime!(
 		Sudo: sudo,
 		EntryCredits: entry_credit::{Module, Call},
 		Factoids: factoid::{Module, Call},
+        Entries: entry::{Module, Call, Storage},
 	}
 );
 
