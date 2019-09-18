@@ -43,7 +43,7 @@ decl_storage! {
 /// 1. Combined sizes do no exceed 1kb. We can get more specific or add
 /// additional fees for number of ext_ids, for example, but for now a
 /// check of the total combined lengths should be in the same neighborhood.
-fn validate_entry_data(content: &Vec<u8>, ext_ids: &Vec<u8>) -> Result {
+fn validate_entry_data(content: &[u8], ext_ids: &[u8]) -> Result {
     if content.len() + ext_ids.len() <= 1024 {
         Ok(())
     } else {
@@ -64,7 +64,7 @@ decl_module! {
         /// also check that the hash already exists in storage.
         fn put_entry (origin, content: Vec<u8>, external_ids: Vec<u8>, chain_id: T::Hash) -> Result {
             let sender = ensure_signed(origin)?;
-            let _ = validate_entry_data(&content, &external_ids)?;
+            validate_entry_data(&content, &external_ids)?;
 
             ensure!(<EntryData<T>>::exists((chain_id, 1)), "This chain does not exist.");
 
@@ -91,7 +91,7 @@ decl_module! {
         /// entry credits.
         fn put_chain (origin, content: Vec<u8>, external_ids: Vec<u8>) -> Result {
             let sender = ensure_signed(origin)?;
-            let _ = validate_entry_data(&content, &external_ids)?;
+            validate_entry_data(&content, &external_ids)?;
             let chain_id = <T as system::Trait>::Hashing::hash(&external_ids);
 
             ensure!(!<EntryData<T>>::exists((chain_id, 1)), "This chain already exists.");
