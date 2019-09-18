@@ -10,7 +10,9 @@ stages:
 code-check:
   stage: code-check
   script:
+    - echo $CARGO_HOME
     - scripts/init.sh
+    - ls /usr/local/cargo
     - scripts/build.sh
     - cargo fmt -- --check
     - cargo clippy -- -D warnings
@@ -32,6 +34,5 @@ build:
 
 cache:
   paths:
-    - apt/
-    - cargo/
+    - /usr/local/cargo
     - target/
