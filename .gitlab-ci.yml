@@ -7,6 +7,9 @@ stages:
   - test
   - build
 
+variables:
+  CARGO_HOME: "${CI_PROJECT_DIR}/.cargo"
+
 code-check:
   stage: code-check
   script:
@@ -32,6 +35,5 @@ build:
 
 cache:
   paths:
-    - apt/
-    - cargo/
+    - .cargo/
     - target/
