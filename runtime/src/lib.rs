@@ -225,7 +225,7 @@ impl factoid::Trait for Runtime {}
 /// Used for the module entry_credit
 impl entry_credit::Trait for Runtime {}
 
-/// Used for the module entry 
+/// Used for the module entry
 impl entry::Trait for Runtime {}
 
 construct_runtime!(
