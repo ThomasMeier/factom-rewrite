@@ -50,6 +50,9 @@ arg_enum! {
 /// Logging Settings
 #[derive(StructOpt, Debug, Deserialize)]
 pub struct Log {
+    #[structopt(long = "log-path", default_value = "factomd-logs.log")]
+    pub log_path: String,
+
     #[structopt(
         short = "l",
         long = "log-level",
@@ -232,6 +235,11 @@ impl FactomConfig {
                 config.log.log_level = value.parse::<LogLevel>().expect("Invalid log level!");
             }
         }
+        if matches.occurrences_of("log_path") > 0 {
+            if let Some(value) = matches.value_of("log_path") {
+                config.log.log_path = value.to_string();
+            }
+        }
         if matches.occurrences_of("walletd_user") > 0 {
             if let Some(value) = matches.value_of("walletd_user") {
                 config.walletd.walletd_user = value.to_string();
@@ -278,7 +286,7 @@ mod tests {
 
     #[test]
     fn test_default() {
-        let config = FactomConfig::new().unwrap();
+        let config = FactomConfig::new().expect("failure to create FactomConfig");
 
         assert_eq!(config.rpc.rpc_addr, "127.0.0.1");
         assert_eq!(config.rpc.rpc_port, 8088);

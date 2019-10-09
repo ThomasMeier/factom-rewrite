@@ -14,6 +14,7 @@ rpc:
 
 log:
   log_level: "CRITICAL" # ["OFF", "CRITICAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"] in that order of precedence
+  log_path: "factomd-logs.log"
 
 walletd:
   walletd_user: "test"

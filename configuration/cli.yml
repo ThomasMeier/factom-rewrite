@@ -19,6 +19,9 @@ args:
         short: k
         long: node-key-env
         takes_value: true
+    - log_path:
+        long: log-path
+        takes_value: true
     - log_level:
         short: l
         long: log-level

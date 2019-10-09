@@ -14,11 +14,11 @@ extern crate slog_term;
 use core::str::FromStr;
 use factomd_configuration::{FactomConfig, Log, LogLevel, Role};
 use futures::{future, sync::oneshot, Future};
-use slog::Drain;
-use slog::Logger;
+use slog::{Drain, Logger, Duplicate};
 use std::cell::RefCell;
 use std::ops::Deref;
 use std::sync::Mutex;
+use std::fs::OpenOptions;
 pub use substrate_cli::{error, informant, parse_and_execute, IntoExit, NoCustom, VersionInfo};
 use substrate_service::ServiceFactory;
 use tokio::runtime::Runtime;
@@ -32,11 +32,26 @@ mod wrapper;
 fn make_logger(log_config: &Log) -> Logger {
     let log_level_config = &log_config.log_level;
     let log_level = slog::Level::from_str(&log_level_config.to_string()).unwrap();
-    let decorator = slog_term::TermDecorator::new().build();
-    let drain = Mutex::new(slog_term::FullFormat::new(decorator).build())
+
+    let log_file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(&log_config.log_path)
+        .unwrap();
+
+    let term_decorator = slog_term::TermDecorator::new().build();
+    let file_decorator = slog_term::PlainDecorator::new(log_file);
+    let term_drain = Mutex::new(slog_term::FullFormat::new(term_decorator).build())
         .filter_level(log_level)
         .fuse();
-    slog::Logger::root(drain, o!("version" => env!("CARGO_PKG_VERSION")))
+    let file_drain = Mutex::new(slog_term::FullFormat::new(file_decorator).build())
+        .filter_level(log_level)
+        .fuse();
+
+    let root = Logger::root(Duplicate::new(term_drain, file_drain).fuse(), o!());
+
+    slog::Logger::root(root, o!("version" => env!("CARGO_PKG_VERSION")))
 }
 
 /// Start the API server
@@ -117,7 +132,7 @@ fn create_substrate_args(factom_config: &FactomConfig) -> Vec<String> {
 
 /// Start new node
 pub fn run(factom_config: FactomConfig) -> Result<(), substrate_cli::error::Error> {
-    // Build logger except if variant is OFF.
+    // Build logger except if variant is SILENT.
     let log_option = match &factom_config.log.log_level {
         LogLevel::SILENT => None,
         _ => Some(make_logger(&factom_config.log)),
